@@ -1,54 +1,54 @@
 
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
 public class SpaceshipController : MonoBehaviour
 {
-    [Header("Movement")]
-    [SerializeField] private float movementSpeed = 10f;
-
-    [Header("Barrel Roll")]
-    [SerializeField] private float barrelRollSpeed = 120f;
-
+    private PlayerControls controls;
     private Rigidbody rb;
-    private PlayerInput playerInput;
+    [SerializeField] private float thrustForce = 10f;
+    [SerializeField] private float maxSpeed = 20f;
 
-    private InputAction moveAction;
-    private InputAction rollAction;
 
-    private void Awake()
+
+    private Vector3 moveDirection = new(0,0,0);
+
+    void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        playerInput = GetComponent<PlayerInput>();
-
-        rb.useGravity = false;
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        controls = new PlayerControls();
+        rb = this.GetComponent<Rigidbody>();
+    }
+    void OnEnable()
+    {
+        controls.Player.Enable();
+        
+    }
+    void OnDisable()
+    {
+        controls.Player.Disable();
     }
 
-    private void Start()
+    private void OnDestroy()
     {
-        moveAction = playerInput.actions.FindAction("Tilt", true);
-        rollAction = playerInput.actions.FindAction("Roll", true);
+        controls.Dispose();
     }
 
-    private void FixedUpdate()
+    void Update()
     {
-        float movement = moveAction.ReadValue<float>();
-        float roll = rollAction.ReadValue<float>();
+        Vector2 movement = controls.Player.Move.ReadValue<Vector2>().normalized;
+        moveDirection = (transform.right * movement.x) + (transform.forward * movement.y);
+    }
 
-        // W and S: Move up and down
-        rb.MovePosition(
-            rb.position + Vector3.up * movement * movementSpeed * Time.fixedDeltaTime
-        );
-
-        // A and D: Barrel roll
-        rb.MoveRotation(
-            rb.rotation * Quaternion.Euler(
-                0f,
-                0f,
-                -roll * barrelRollSpeed * Time.fixedDeltaTime
-            )
-        );
+    void FixedUpdate()
+    {   
+        rb.AddForce(moveDirection, ForceMode.Force);
+        Vector3 clampedValue = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
+        rb.linearVelocity = clampedValue;
+    }
+    void OnMove()
+    {
+        
     }
 }
