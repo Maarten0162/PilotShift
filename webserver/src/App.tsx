@@ -7,7 +7,8 @@ import './App.css'
 
 import {
   FilesetResolver,
-  HandLandmarker
+  HandLandmarker,
+  type NormalizedLandmark
 } from '@mediapipe/tasks-vision'
 
 function App() {
@@ -86,8 +87,30 @@ function App() {
           performance.now()
         )
 
-        console.log('Detected hands:', results.landmarks.length)
-        console.log('Landmarks:', results.landmarks)
+        // console.log('Detected hands:', results.landmarks.length)
+        // console.log('Landmarks:', results.landmarks)
+        // console.log('Handedness:', results.handedness)
+
+        let leftWrist: NormalizedLandmark | null = null
+        let rightWrist: NormalizedLandmark | null = null
+
+        for (let i = 0; i < results.handedness.length; i++) {
+          const handedness = results.handedness[i][0].categoryName
+          const wrist = results.landmarks[i][0]
+
+          if (handedness === 'Left') {
+            leftWrist = wrist
+          } else if (handedness === 'Right') {
+            rightWrist = wrist
+          }
+        }
+
+        if (leftWrist && rightWrist) {
+          const midX = (leftWrist.x + rightWrist.x) / 2
+          const midY = (leftWrist.y + rightWrist.y) / 2
+
+          console.log('Yoke midpoint:', midX, midY)
+        }
       }
 
       animationFrameId = requestAnimationFrame(detectHands)
