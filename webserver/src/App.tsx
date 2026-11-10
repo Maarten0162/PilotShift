@@ -15,15 +15,22 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const handLandmarkerRef = useRef<HandLandmarker | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const contextRef = useRef<CanvasRenderingContext2D | null>(null)
 
   useEffect(() => {
     let active = true
     let animationFrameId = 0
+    let frameCount = 0
 
     async function startCamera() {
       try {
         const cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+           video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 30 }
+          },
           audio: false
         })
 
@@ -57,7 +64,8 @@ function App() {
           {
             baseOptions: {
               modelAssetPath:
-                'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'
+                'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+              delegate: 'GPU'
             },
             runningMode: 'VIDEO',
             numHands: 2
@@ -82,10 +90,20 @@ function App() {
       const handLandmarker = handLandmarkerRef.current
 
       if (video && handLandmarker && video.readyState >= 2) {
+        const startTime = performance.now()
+
         const results = handLandmarker.detectForVideo(
           video,
           performance.now()
         )
+
+        const processingTime = performance.now() - startTime
+
+        frameCount++
+
+        if (frameCount % 60 === 0) {
+          console.log('Detection time:', processingTime.toFixed(1), 'ms')
+        }
 
         // console.log('Detected hands:', results.landmarks.length)
         // console.log('Landmarks:', results.landmarks)
@@ -109,7 +127,45 @@ function App() {
           const midX = (leftWrist.x + rightWrist.x) / 2
           const midY = (leftWrist.y + rightWrist.y) / 2
 
-          console.log('Yoke midpoint:', midX, midY)
+          const canvas = canvasRef.current
+          const ctx = contextRef.current
+
+          if (canvas && ctx) {
+            // Clear the previous frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            // Convert normalized coordinates (0-1) into canvas pixels
+            const leftX = leftWrist.x * canvas.width
+            const leftY = leftWrist.y * canvas.height
+
+            const rightX = rightWrist.x * canvas.width
+            const rightY = rightWrist.y * canvas.height
+
+            // Draw a line between both wrists
+            ctx.beginPath()
+            ctx.moveTo(leftX, leftY)
+            ctx.lineTo(rightX, rightY)
+            ctx.strokeStyle = 'lime'
+            ctx.lineWidth = 3
+            ctx.stroke()
+
+            // Draw wrist markers
+            ctx.fillStyle = 'red'
+
+            ctx.beginPath()
+            ctx.arc(leftX, leftY, 8, 0, Math.PI * 2)
+            ctx.fill()
+
+            ctx.beginPath()
+            ctx.arc(rightX, rightY, 8, 0, Math.PI * 2)
+            ctx.fill()
+
+            // Draw midpoint
+            ctx.fillStyle = 'yellow'
+            ctx.beginPath()
+            ctx.arc(midX * canvas.width, midY * canvas.height, 6, 0, Math.PI * 2)
+            ctx.fill()
+          }
         }
       }
 
@@ -127,8 +183,13 @@ function App() {
       detectHands()
     }
 
+  
+
     initialize()
 
+    if (canvasRef.current) {
+      contextRef.current = canvasRef.current.getContext('2d')
+    }
     return () => {
       active = false
 
@@ -161,8 +222,15 @@ function App() {
 
         <div>
           <h1>Video feed \/</h1>
-          <video ref={videoRef} autoPlay playsInline muted />
-          <canvas id="output"></canvas>
+          <div className="camera-container">
+            <video ref={videoRef} autoPlay playsInline muted />
+
+            <canvas
+              ref={canvasRef}
+              width={640}
+              height={480}
+            />
+          </div>
         </div>
       </section>
     </>
