@@ -17,11 +17,13 @@ function App() {
   const handLandmarkerRef = useRef<HandLandmarker | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
+  const neutralAngleRef = useRef<number | null>(null)
 
   useEffect(() => {
     let active = true
     let animationFrameId = 0
     let frameCount = 0
+    
 
     async function startCamera() {
       try {
@@ -29,7 +31,7 @@ function App() {
            video: {
             width: { ideal: 640 },
             height: { ideal: 480 },
-            frameRate: { ideal: 30 }
+            frameRate: { ideal: 60 }
           },
           audio: false
         })
@@ -38,7 +40,10 @@ function App() {
           cameraStream.getTracks().forEach(track => track.stop())
           return
         }
-
+        console.log(
+  'Camera settings:',
+  cameraStream.getVideoTracks()[0].getSettings()
+)
         streamRef.current = cameraStream
 
         if (videoRef.current) {
@@ -68,7 +73,10 @@ function App() {
               delegate: 'GPU'
             },
             runningMode: 'VIDEO',
-            numHands: 2
+            numHands: 2,
+            minHandDetectionConfidence: 0.4,
+            minHandPresenceConfidence: 0.4,
+            minTrackingConfidence: 0.4
           }
         )
 
@@ -109,37 +117,50 @@ function App() {
         // console.log('Landmarks:', results.landmarks)
         // console.log('Handedness:', results.handedness)
 
-        let leftWrist: NormalizedLandmark | null = null
-        let rightWrist: NormalizedLandmark | null = null
+        let leftFinger: NormalizedLandmark | null = null
+        let rightFinger: NormalizedLandmark | null = null
 
         for (let i = 0; i < results.handedness.length; i++) {
           const handedness = results.handedness[i][0].categoryName
-          const wrist = results.landmarks[i][0]
+          const middleFinger = results.landmarks[i][10]
 
           if (handedness === 'Left') {
-            leftWrist = wrist
+            leftFinger = middleFinger
           } else if (handedness === 'Right') {
-            rightWrist = wrist
+            rightFinger = middleFinger
           }
         }
 
-        if (leftWrist && rightWrist) {
-          const midX = (leftWrist.x + rightWrist.x) / 2
-          const midY = (leftWrist.y + rightWrist.y) / 2
+        if (leftFinger && rightFinger) {
+          const midX = (leftFinger.x + rightFinger.x) / 2
+          const midY = (leftFinger.y + rightFinger.y) / 2
+
+          const dx = rightFinger.x - leftFinger.x
+          const dy = rightFinger.y - leftFinger.y
+          const angle = Math.atan2(dy, -dx)
+          const angleDegrees = angle * (180 / Math.PI)
+          console.log('Yoke angle:', angleDegrees.toFixed(1))
 
           const canvas = canvasRef.current
           const ctx = contextRef.current
+
+          if (neutralAngleRef.current === null) {
+            neutralAngleRef.current = angle
+          }
+
+          const relativeAngle = angle - neutralAngleRef.current
+          const relativeAngleDegrees = relativeAngle * (180 / Math.PI)
 
           if (canvas && ctx) {
             // Clear the previous frame
             ctx.clearRect(0, 0, canvas.width, canvas.height)
 
             // Convert normalized coordinates (0-1) into canvas pixels
-            const leftX = leftWrist.x * canvas.width
-            const leftY = leftWrist.y * canvas.height
+            const leftX = leftFinger.x * canvas.width
+            const leftY = leftFinger.y * canvas.height
 
-            const rightX = rightWrist.x * canvas.width
-            const rightY = rightWrist.y * canvas.height
+            const rightX = rightFinger.x * canvas.width
+            const rightY = rightFinger.y * canvas.height
 
             // Draw a line between both wrists
             ctx.beginPath()
