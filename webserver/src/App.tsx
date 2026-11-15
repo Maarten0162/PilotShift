@@ -12,6 +12,12 @@ import {
 } from '@mediapipe/tasks-vision'
 
 function App() {
+  
+  //websocket
+  const socketRef = useRef<WebSocket | null>(null)
+
+
+  //tracking
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const handLandmarkerRef = useRef<HandLandmarker | null>(null)
@@ -64,6 +70,29 @@ function App() {
       }
     }, 1000)
   }
+
+  useEffect(() => {
+  const socket = new WebSocket('ws://localhost:8080/yoke')
+
+  socketRef.current = socket
+
+  socket.onopen = () => {
+    console.log('Connected to Unity!')
+    socket.send('Hello from React!')
+  }
+  socket.onclose = () => {
+    console.log('Disconnected from Unity')
+  }
+
+  socket.onerror = (error) => {
+    console.error('WebSocket error:', error)
+  }
+
+  return () => {
+    socket.close()
+    socketRef.current = null
+  }
+}, [])
 
   useEffect(() => {
   localStorage.setItem('mirrorCamera', String(mirrorCamera))
