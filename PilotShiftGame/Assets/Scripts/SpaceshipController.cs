@@ -13,7 +13,11 @@ public class SpaceshipController : MonoBehaviour
     [SerializeField] private float rotationForce = 10f;
     [SerializeField] private float maxSpeed = 20f;
 
+    //websocket
+    [SerializeField] private YokeReceiver receiver;
 
+
+    //game
 
     private Vector3 moveDirection = new(0,0,0);
     private Vector3 rotationDirection = new(0,0,0);
@@ -46,10 +50,12 @@ public class SpaceshipController : MonoBehaviour
 
     void Update()
     {
-        moveInput = controls.Player.Move.ReadValue<float>();
+        // moveInput = controls.Player.Move.ReadValue<float>();
+        moveInput = 25f;
         pitchInput = controls.Player.Pitch.ReadValue<float>();
         yawInput = controls.Player.Yaw.ReadValue<float>();
-        rollInput = controls.Player.Roll.ReadValue<float>();
+        // rollInput = controls.Player.Roll.ReadValue<float>();
+        rollInput = receiver.RollValue;
 
         moveDirection = transform.forward * moveInput;      
         rotationDirection = new(pitchInput, yawInput, -rollInput);

@@ -242,8 +242,8 @@ function App() {
             setRoll(roll)
           }
 
-          if (frameCount % 60 === 0) {
-            console.log('Roll input:', roll.toFixed(2))
+          if (socketRef.current?.readyState === WebSocket.OPEN) {
+            socketRef.current.send(roll.toString())
           }
 
           if (canvas && ctx) {
