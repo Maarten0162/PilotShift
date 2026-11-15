@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
@@ -18,17 +18,67 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
   const neutralAngleRef = useRef<number | null>(null)
+  const latestAngleRef = useRef<number | null>(null)
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const countdownIntervalRef = useRef<number | null>(null)
+  const [roll, setRoll] = useState(0)
+  
+  const [mirrorCamera, setMirrorCamera] = useState(() => {
+    const savedPreference = localStorage.getItem('mirrorCamera')
+
+    return savedPreference === null
+      ? true
+      : savedPreference === 'true'
+  })
+
+  function calibrateYoke() {
+    const currentAngle = latestAngleRef.current
+
+    if (currentAngle === null) {
+      console.warn('Cannot calibrate: no hand position detected')
+      return
+    }
+
+    neutralAngleRef.current = currentAngle
+
+    console.log('Yoke calibrated!')
+  }
+
+  function startCalibration() {
+    if (countdownIntervalRef.current !== null) return
+
+    let remaining = 3
+    setCountdown(remaining)
+
+    countdownIntervalRef.current = window.setInterval(() => {
+      remaining--
+
+      if (remaining > 0) {
+        setCountdown(remaining)
+      } else {
+        window.clearInterval(countdownIntervalRef.current!)
+        countdownIntervalRef.current = null
+
+        calibrateYoke()
+        setCountdown(null)
+      }
+    }, 1000)
+  }
+
+  useEffect(() => {
+  localStorage.setItem('mirrorCamera', String(mirrorCamera))
+}, [mirrorCamera])
 
   useEffect(() => {
     let active = true
     let animationFrameId = 0
     let frameCount = 0
-    
+
 
     async function startCamera() {
       try {
         const cameraStream = await navigator.mediaDevices.getUserMedia({
-           video: {
+          video: {
             width: { ideal: 640 },
             height: { ideal: 480 },
             frameRate: { ideal: 60 }
@@ -41,9 +91,9 @@ function App() {
           return
         }
         console.log(
-  'Camera settings:',
-  cameraStream.getVideoTracks()[0].getSettings()
-)
+          'Camera settings:',
+          cameraStream.getVideoTracks()[0].getSettings()
+        )
         streamRef.current = cameraStream
 
         if (videoRef.current) {
@@ -138,18 +188,34 @@ function App() {
           const dx = rightFinger.x - leftFinger.x
           const dy = rightFinger.y - leftFinger.y
           const angle = Math.atan2(dy, -dx)
+          latestAngleRef.current = angle
           const angleDegrees = angle * (180 / Math.PI)
-          console.log('Yoke angle:', angleDegrees.toFixed(1))
 
           const canvas = canvasRef.current
           const ctx = contextRef.current
 
-          if (neutralAngleRef.current === null) {
-            neutralAngleRef.current = angle
+
+          let relativeAngleDegrees: number | null = null
+          let roll = 0
+
+          if (neutralAngleRef.current !== null) {
+            const relativeAngle = angle - neutralAngleRef.current
+            relativeAngleDegrees = relativeAngle * (180 / Math.PI)
           }
 
-          const relativeAngle = angle - neutralAngleRef.current
-          const relativeAngleDegrees = relativeAngle * (180 / Math.PI)
+          if (relativeAngleDegrees !== null) {
+            const maxRollAngle = 30
+
+            roll = Math.max(
+              -1,
+              Math.min(1, relativeAngleDegrees / maxRollAngle)
+            )
+            setRoll(roll)
+          }
+
+          if (frameCount % 60 === 0) {
+            console.log('Roll input:', roll.toFixed(2))
+          }
 
           if (canvas && ctx) {
             // Clear the previous frame
@@ -188,6 +254,10 @@ function App() {
             ctx.fill()
           }
         }
+        else {
+          latestAngleRef.current = null
+          setRoll(0)
+        }
       }
 
       animationFrameId = requestAnimationFrame(detectHands)
@@ -204,7 +274,7 @@ function App() {
       detectHands()
     }
 
-  
+
 
     initialize()
 
@@ -229,6 +299,10 @@ function App() {
         handLandmarkerRef.current.close()
         handLandmarkerRef.current = null
       }
+
+      if (countdownIntervalRef.current !== null) {
+        window.clearInterval(countdownIntervalRef.current)
+      }
     }
   }, [])
 
@@ -243,7 +317,12 @@ function App() {
 
         <div>
           <h1>Video feed \/</h1>
-          <div className="camera-container">
+          <div
+              className="camera-container"
+              style={{
+                transform: mirrorCamera ? 'scaleX(-1)' : 'none'
+              }}
+            >
             <video ref={videoRef} autoPlay playsInline muted />
 
             <canvas
@@ -251,6 +330,43 @@ function App() {
               width={640}
               height={480}
             />
+          </div>
+        </div>
+        <label>
+        <input
+          type="checkbox"
+          checked={mirrorCamera}
+          onChange={(event) => setMirrorCamera(event.target.checked)}
+        />
+        Mirror camera
+      </label>
+        <button
+          onClick={startCalibration}
+          disabled={countdown !== null}
+        >
+          {countdown !== null
+            ? `Calibrating in ${countdown}...`
+            : 'Calibrate Yoke'}
+        </button>
+
+        <div className="roll-meter">
+          <h3>Roll: {roll.toFixed(2)}</h3>
+
+          <div className="roll-track">
+            <div className="roll-center" />
+
+            <div
+              className="roll-indicator"
+              style={{
+                left: `${((roll + 1) / 2) * 100}%`
+              }}
+            />
+          </div>
+
+          <div className="roll-labels">
+            <span>-1.0</span>
+            <span>0</span>
+            <span>+1.0</span>
           </div>
         </div>
       </section>
