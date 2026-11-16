@@ -243,7 +243,10 @@ function App() {
           }
 
           if (socketRef.current?.readyState === WebSocket.OPEN) {
-            socketRef.current.send(roll.toString())
+            socketRef.current.send(JSON.stringify({
+              roll: roll,
+              time: Date.now()
+            }))
           }
 
           if (canvas && ctx) {

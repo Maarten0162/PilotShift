@@ -66,7 +66,6 @@ public class SpaceshipController : MonoBehaviour
         rb.AddForce(moveDirection * thrustForce, ForceMode.Force);
         Vector3 clampedValue = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
         rb.linearVelocity = clampedValue;
-
         rb.AddTorque(transform.TransformDirection(rotationDirection * rotationForce), ForceMode.Force); //transform.transformdirection turns world axis to local axis
     }
     void OnMove()
