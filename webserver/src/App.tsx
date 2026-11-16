@@ -241,7 +241,8 @@ function App() {
             )
             setRoll(roll)
           }
-
+          const temp = (leftFinger.z + rightFinger.z)/2;
+          console.log("avg:", temp)
           if (socketRef.current?.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify({
               roll: roll,
