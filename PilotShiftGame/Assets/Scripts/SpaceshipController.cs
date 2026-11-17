@@ -52,10 +52,12 @@ public class SpaceshipController : MonoBehaviour
     {
         // moveInput = controls.Player.Move.ReadValue<float>();
         moveInput = 25f;
-        pitchInput = controls.Player.Pitch.ReadValue<float>();
+        // pitchInput = controls.Player.Pitch.ReadValue<float>();
         yawInput = controls.Player.Yaw.ReadValue<float>();
         // rollInput = controls.Player.Roll.ReadValue<float>();
         rollInput = receiver.RollValue;
+        pitchInput = receiver.PitchValue;
+
 
         moveDirection = transform.forward * moveInput;      
         rotationDirection = new(pitchInput, yawInput, -rollInput);

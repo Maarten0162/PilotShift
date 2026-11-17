@@ -7,6 +7,7 @@ public class YokeReceiver : MonoBehaviour
 {
     private WebSocketServer server;
     public float RollValue = 0f;
+    public float PitchValue = 0f;
 
     void Start()
     {

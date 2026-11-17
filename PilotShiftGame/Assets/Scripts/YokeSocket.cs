@@ -15,5 +15,6 @@ public class YokeSocket : WebSocketBehavior
         double delay = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - data.time;
         Debug.Log("delay: " + delay + " value: " + data.roll);
         receiver.RollValue = data.roll;
+        receiver.PitchValue = data.pitch;
     }
 }

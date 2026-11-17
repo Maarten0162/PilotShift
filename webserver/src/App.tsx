@@ -24,7 +24,9 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
   const neutralAngleRef = useRef<number | null>(null)
+  const neutralDepthRef = useRef<number | null>(null)
   const latestAngleRef = useRef<number | null>(null)
+  const latestDepthRef = useRef<number | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
   const countdownIntervalRef = useRef<number | null>(null)
   const [roll, setRoll] = useState(0)
@@ -39,13 +41,14 @@ function App() {
 
   function calibrateYoke() {
     const currentAngle = latestAngleRef.current
-
-    if (currentAngle === null) {
+    const currentDepth = latestDepthRef.current
+    if (currentAngle === null || currentDepth === null) {
       console.warn('Cannot calibrate: no hand position detected')
       return
     }
 
     neutralAngleRef.current = currentAngle
+    neutralDepthRef.current = currentDepth
 
     console.log('Yoke calibrated!')
   }
@@ -217,6 +220,8 @@ function App() {
           const dx = rightFinger.x - leftFinger.x
           const dy = rightFinger.y - leftFinger.y
           const angle = Math.atan2(dy, -dx)
+          const depth = (leftFinger.z + rightFinger.z)/2;
+
           latestAngleRef.current = angle
           const angleDegrees = angle * (180 / Math.PI)
 
@@ -226,6 +231,7 @@ function App() {
 
           let relativeAngleDegrees: number | null = null
           let roll = 0
+          let pitch = 0
 
           if (neutralAngleRef.current !== null) {
             const relativeAngle = angle - neutralAngleRef.current
@@ -241,11 +247,24 @@ function App() {
             )
             setRoll(roll)
           }
-          const temp = (leftFinger.z + rightFinger.z)/2;
-          console.log("avg:", temp)
+            latestDepthRef.current = depth
+
+          if(neutralDepthRef.current !== null){
+
+          const maxDepthAngle = 0.03
+          const relativeDepth = depth - neutralDepthRef.current
+
+
+          pitch = Math.max(-1, Math.min(1, relativeDepth / maxDepthAngle))
+            console.log(pitch)
+
+          }
+
+          
           if (socketRef.current?.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify({
               roll: roll,
+              pitch: pitch,
               time: Date.now()
             }))
           }
@@ -289,6 +308,7 @@ function App() {
         }
         else {
           latestAngleRef.current = null
+          latestDepthRef.current = null
           setRoll(0)
         }
       }
