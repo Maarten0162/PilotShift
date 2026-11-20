@@ -24,9 +24,9 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
   const neutralAngleRef = useRef<number | null>(null)
-  const neutralDepthRef = useRef<number | null>(null)
   const latestAngleRef = useRef<number | null>(null)
-  const latestDepthRef = useRef<number | null>(null)
+  const neutralPitchRef = useRef<number | null>(null)
+  const latestPitchRef = useRef<number | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
   const countdownIntervalRef = useRef<number | null>(null)
   const [roll, setRoll] = useState(0)
@@ -41,14 +41,10 @@ function App() {
 
   function calibrateYoke() {
     const currentAngle = latestAngleRef.current
-    const currentDepth = latestDepthRef.current
-    if (currentAngle === null || currentDepth === null) {
-      console.warn('Cannot calibrate: no hand position detected')
-      return
-    }
+    const currentPitch = latestPitchRef.current
 
+    neutralPitchRef.current = currentPitch
     neutralAngleRef.current = currentAngle
-    neutralDepthRef.current = currentDepth
 
     console.log('Yoke calibrated!')
   }
@@ -202,28 +198,58 @@ function App() {
         let leftFinger: NormalizedLandmark | null = null
         let rightFinger: NormalizedLandmark | null = null
 
+        let leftWrist: NormalizedLandmark | null = null
+        let leftKnuckle: NormalizedLandmark | null = null
+
+        let rightWrist: NormalizedLandmark | null = null
+        let rightKnuckle: NormalizedLandmark | null = null
+        
+
         for (let i = 0; i < results.handedness.length; i++) {
           const handedness = results.handedness[i][0].categoryName
-          const middleFinger = results.landmarks[i][10]
+          const hand = results.landmarks[i]
+          const middleFinger = hand[10]
+          
 
           if (handedness === 'Left') {
             leftFinger = middleFinger
+            leftWrist = hand[0]
+            leftKnuckle = hand[9]
           } else if (handedness === 'Right') {
             rightFinger = middleFinger
+            rightWrist = hand[0]
+            rightKnuckle = hand[9]
           }
         }
 
         if (leftFinger && rightFinger) {
+          if (leftWrist && leftKnuckle && rightWrist && rightKnuckle) {
+
+            const leftVector = {
+              x: leftKnuckle.x - leftWrist.x,
+              y: leftKnuckle.y - leftWrist.y,
+              z: leftKnuckle.z - leftWrist.z
+            }
+
+            const rightVector = {
+              x: rightKnuckle.x - rightWrist.x,
+              y: rightKnuckle.y - rightWrist.y,
+              z: rightKnuckle.z - rightWrist.z
+            }
+
+            const averageY = (leftVector.y + rightVector.y) / 2;
+
+            latestPitchRef.current = averageY
+          }
+
           const midX = (leftFinger.x + rightFinger.x) / 2
           const midY = (leftFinger.y + rightFinger.y) / 2
 
           const dx = rightFinger.x - leftFinger.x
           const dy = rightFinger.y - leftFinger.y
           const angle = Math.atan2(dy, -dx)
-          const depth = (leftFinger.z + rightFinger.z)/2;
 
           latestAngleRef.current = angle
-          const angleDegrees = angle * (180 / Math.PI)
 
           const canvas = canvasRef.current
           const ctx = contextRef.current
@@ -247,19 +273,21 @@ function App() {
             )
             setRoll(roll)
           }
-            latestDepthRef.current = depth
 
-          if(neutralDepthRef.current !== null){
+          if (neutralPitchRef.current !== null && latestPitchRef.current !== null) {
 
-          const maxDepthAngle = 0.03
-          const relativeDepth = depth - neutralDepthRef.current
+            const relativePitch =
+              latestPitchRef.current - neutralPitchRef.current
 
+            const maxPitchUp = 0.04
+            const maxPitchDown = 0.08
 
-          pitch = Math.max(-1, Math.min(1, relativeDepth / maxDepthAngle))
-            console.log(pitch)
-
+            if (relativePitch < 0) {
+              pitch = Math.max(-1, relativePitch / maxPitchUp)
+            } else {
+              pitch = Math.min(1, relativePitch / maxPitchDown)
+            }
           }
-
           
           if (socketRef.current?.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify({
@@ -308,7 +336,7 @@ function App() {
         }
         else {
           latestAngleRef.current = null
-          latestDepthRef.current = null
+          latestPitchRef.current = null
           setRoll(0)
         }
       }
