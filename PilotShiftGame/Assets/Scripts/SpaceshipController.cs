@@ -1,8 +1,4 @@
-
-using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
 public class SpaceshipController : MonoBehaviour
@@ -16,6 +12,7 @@ public class SpaceshipController : MonoBehaviour
 
     //websocket
     [SerializeField] private YokeReceiver receiver;
+    [SerializeField] private GameManager gameManager;    
 
 
     //game
@@ -51,37 +48,50 @@ public class SpaceshipController : MonoBehaviour
 
     void Update()
     {
-        if (useMotion)
+        if(gameManager.CurrentState == GameManager.GameState.Active)
         {
-            moveInput = 25f;
-            rollInput = receiver.RollValue;
-            pitchInput = receiver.PitchValue;
+            if (useMotion)
+            {
+                moveInput = 25f;
+                rollInput = receiver.RollValue;
+                pitchInput = receiver.PitchValue;
 
+            }
+            else
+            {
+                moveInput = controls.Player.Move.ReadValue<float>();
+            
+                pitchInput = controls.Player.Pitch.ReadValue<float>();
+                rollInput = controls.Player.Roll.ReadValue<float>();
+
+            }
+            yawInput = controls.Player.Yaw.ReadValue<float>();
+
+
+            moveDirection = transform.forward * moveInput;      
+            rotationDirection = new(pitchInput, yawInput, -rollInput);
         }
         else
         {
-            moveInput = controls.Player.Move.ReadValue<float>();
-        
-            pitchInput = controls.Player.Pitch.ReadValue<float>();
-            rollInput = controls.Player.Roll.ReadValue<float>();
+            moveInput = 0f;
+            pitchInput = 0f;
+            yawInput = 0f;
+            rollInput = 0f;
 
+            moveDirection = Vector3.zero;
+            rotationDirection = Vector3.zero;
         }
-        yawInput = controls.Player.Yaw.ReadValue<float>();
-
-
-        moveDirection = transform.forward * moveInput;      
-        rotationDirection = new(pitchInput, yawInput, -rollInput);
+        
     }
 
     void FixedUpdate()
     {   
-        rb.AddForce(moveDirection * thrustForce, ForceMode.Force);
-        Vector3 clampedValue = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
-        rb.linearVelocity = clampedValue;
-        rb.AddTorque(transform.TransformDirection(rotationDirection * rotationForce), ForceMode.Force); //transform.transformdirection turns world axis to local axis
-    }
-    void OnMove()
-    {
-        
+        if (gameManager.CurrentState == GameManager.GameState.Active)
+        {
+             rb.AddForce(moveDirection * thrustForce, ForceMode.Force);
+            Vector3 clampedValue = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
+            rb.linearVelocity = clampedValue;
+            rb.AddTorque(transform.TransformDirection(rotationDirection * rotationForce), ForceMode.Force); //transform.transformdirection turns world axis to local axis
+        }
     }
 }
