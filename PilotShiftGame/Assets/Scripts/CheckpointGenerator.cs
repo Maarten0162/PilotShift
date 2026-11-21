@@ -13,8 +13,7 @@ public class CheckpointGenerator : MonoBehaviour
     public List<Checkpoint> Checkpoints => list;
     public UnityEngine.Vector3 StartPos {get; private set;}
     public UnityEngine.Quaternion StartRot {get; private set;}
-
-
+    
     private float length;
     private float steps;
     private int nextCheckpointIndex = 0;
@@ -42,7 +41,11 @@ public class CheckpointGenerator : MonoBehaviour
             Checkpoint checkpoint = Instantiate(checkpointPrefab, position, UnityEngine.Quaternion.LookRotation(tangent, up)).GetComponentInChildren<Checkpoint>();
             checkpoint.index = i; 
             checkpoint.generator = this;
+            Debug.Log(checkpoint.transform.root.name);
             
+
+            if(i == 0) checkpoint.setState(Checkpoint.CheckpointState.Next);
+            else checkpoint.setState(Checkpoint.CheckpointState.Normal);            
             list.Add(checkpoint);  
         }
     }
@@ -58,6 +61,8 @@ public class CheckpointGenerator : MonoBehaviour
             }
 
             list[index].Reached = true;
+            list[index].setState(Checkpoint.CheckpointState.Reached);
+            list[index + 1].setState(Checkpoint.CheckpointState.Next);
             nextCheckpointIndex++;
             Debug.Log("Correct checkpoint!");
         }

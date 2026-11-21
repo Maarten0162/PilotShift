@@ -15,16 +15,10 @@ public class GameManager : MonoBehaviour
     private double raceStartTime;
     private double raceTime;
     public CheckpointGenerator checkpointGenerator;
-    private Color normalColor;
-    private Color nextColor;
-    private Color reachedColor;
     public GameState CurrentState {get; private set;} = GameState.Waiting;
 
     void Awake()
     {
-        ColorUtility.TryParseHtmlString("#00FFFA", out normalColor);
-        ColorUtility.TryParseHtmlString("#00FFFA", out normalColor);
-        ColorUtility.TryParseHtmlString("#00FFFA", out normalColor);
     }
 
     void Start()
