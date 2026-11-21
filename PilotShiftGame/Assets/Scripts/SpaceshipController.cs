@@ -13,6 +13,7 @@ public class SpaceshipController : MonoBehaviour
     //websocket
     [SerializeField] private YokeReceiver receiver;
     [SerializeField] private GameManager gameManager;    
+    [SerializeField] private GameObject arrow;    
 
 
     //game
@@ -87,6 +88,7 @@ public class SpaceshipController : MonoBehaviour
             moveDirection = Vector3.zero;
             rotationDirection = Vector3.zero;
         }
+        // pointArrow();
         
     }
 
@@ -99,5 +101,11 @@ public class SpaceshipController : MonoBehaviour
             rb.linearVelocity = clampedValue;
             rb.AddTorque(transform.TransformDirection(rotationDirection * rotationForce), ForceMode.Force); //transform.transformdirection turns world axis to local axis
         }
+    }
+
+    private void pointArrow()
+    {
+        CheckpointGenerator gen = gameManager.checkpointGenerator;
+        arrow.transform.rotation = gen.Checkpoints[gen.nextCheckpointIndex].transform.rotation;
     }
 }

@@ -13,10 +13,11 @@ public class CheckpointGenerator : MonoBehaviour
     public List<Checkpoint> Checkpoints => list;
     public UnityEngine.Vector3 StartPos {get; private set;}
     public UnityEngine.Quaternion StartRot {get; private set;}
+
     
     private float length;
     private float steps;
-    private int nextCheckpointIndex = 0;
+    public int nextCheckpointIndex {get; private set;} = 0;
     
 
     void Awake()
