@@ -18,6 +18,8 @@ public class GameManager : MonoBehaviour
 
     public GameState CurrentState {get; private set;} = GameState.Waiting;
 
+    [SerializeField] private CheckpointGenerator checkpointGenerator;
+
     void Start()
     {
         Time.timeScale = 0f;
