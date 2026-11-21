@@ -46,6 +46,12 @@ public class SpaceshipController : MonoBehaviour
         controls.Dispose();
     }
 
+    void Start()
+    {
+        this.gameObject.transform.position = gameManager.checkpointGenerator.StartPos;
+        this.gameObject.transform.rotation = gameManager.checkpointGenerator.StartRot;
+    }
+
     void Update()
     {
         if(gameManager.CurrentState == GameManager.GameState.Active)

@@ -5,9 +5,6 @@ using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
-    private double raceStartTime;
-    private double raceTime;
-
     public enum GameState
     {
         Waiting,
@@ -15,10 +12,11 @@ public class GameManager : MonoBehaviour
         Paused,
         Finished
     }
-
+    private double raceStartTime;
+    private double raceTime;
+    public CheckpointGenerator checkpointGenerator;
     public GameState CurrentState {get; private set;} = GameState.Waiting;
 
-    [SerializeField] private CheckpointGenerator checkpointGenerator;
 
     void Start()
     {
@@ -26,7 +24,6 @@ public class GameManager : MonoBehaviour
 
     }
 
-    // Update is called once per frame
     void Update()
     {
         if(Keyboard.current.spaceKey.wasPressedThisFrame)
@@ -49,7 +46,7 @@ public class GameManager : MonoBehaviour
 
         if(CurrentState == GameState.Active) raceTime = Time.timeAsDouble - raceStartTime;
     }
-
+    
     private void StartRace()
     {
         CurrentState = GameState.Active;

@@ -4,6 +4,7 @@ public class Checkpoint : MonoBehaviour
 {
     public int index = -1;
     public bool Reached = false;
+    public CheckpointGenerator generator;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -13,7 +14,7 @@ public class Checkpoint : MonoBehaviour
             if (other.CompareTag("Player"))
             {
                 Debug.Log("Entered Checkpoint");
-                Reached = true;
+                generator.ReachCheckpoint(index);
             }
         }
         
