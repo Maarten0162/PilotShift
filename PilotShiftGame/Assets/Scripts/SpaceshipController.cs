@@ -88,7 +88,7 @@ public class SpaceshipController : MonoBehaviour
             moveDirection = Vector3.zero;
             rotationDirection = Vector3.zero;
         }
-        // pointArrow();
+        pointArrow();
         
     }
 
@@ -104,8 +104,11 @@ public class SpaceshipController : MonoBehaviour
     }
 
     private void pointArrow()
-    {
-        CheckpointGenerator gen = gameManager.checkpointGenerator;
-        arrow.transform.rotation = gen.Checkpoints[gen.nextCheckpointIndex].transform.rotation;
-    }
+{
+    CheckpointGenerator gen = gameManager.checkpointGenerator;
+
+    Vector3 direction = gen.Checkpoints[gen.nextCheckpointIndex].transform.position- arrow.transform.position;
+
+    arrow.transform.rotation = Quaternion.LookRotation(direction);
+}
 }
