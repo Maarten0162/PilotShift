@@ -987,9 +987,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d478596e153681459400e2dbdd9603b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointGenerator
-  checkpointAmount: 10
+  checkpointAmount: 12
   splineContainer: {fileID: 324445561}
   checkpointPrefab: {fileID: 2529330454833251109, guid: d41c816fe332ac340ae25c8217e6d690, type: 3}
+  gm: {fileID: 609733277}
 --- !u!4 &1501413590
 Transform:
   m_ObjectHideFlags: 0
@@ -1079,6 +1080,10 @@ PrefabInstance:
       propertyPath: gameManager
       value: 
       objectReference: {fileID: 609733277}
+    - target: {fileID: 3488321164262348029, guid: 8403e0c8c9512e040a17d2b8973aef67, type: 3}
+      propertyPath: thrustForce
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 7640789517759573248, guid: 8403e0c8c9512e040a17d2b8973aef67, type: 3}
       propertyPath: m_LocalPosition.x
       value: 7.61218

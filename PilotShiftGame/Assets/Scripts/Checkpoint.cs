@@ -7,12 +7,15 @@ public class Checkpoint : MonoBehaviour
     {
         Normal,
         Next,
-        Reached
+        Reached,
+        Finish
     }
 
     private Color normalColor;
     private Color nextColor;
     private Color reachedColor;
+    private Color finishBaseColor;
+    private Color finishEmmisionColor;
 
     public int index = -1;
     public bool Reached = false;
@@ -24,6 +27,8 @@ public class Checkpoint : MonoBehaviour
         ColorUtility.TryParseHtmlString("#FF0025", out normalColor);
         ColorUtility.TryParseHtmlString("#00FFFA", out nextColor);
         ColorUtility.TryParseHtmlString("#0BFF00", out reachedColor);
+        ColorUtility.TryParseHtmlString("#0030FF", out finishBaseColor);
+        ColorUtility.TryParseHtmlString("#6f00ff", out finishEmmisionColor);
 
         renderer = transform.parent.GetChild(0).GetComponent<MeshRenderer>();
         Debug.Log(renderer);
@@ -62,6 +67,10 @@ public class Checkpoint : MonoBehaviour
             case CheckpointState.Reached:
                 renderer.material.SetColor("_BaseColor", reachedColor);
                 renderer.material.SetColor("_EmissionColor", reachedColor);
+                break;
+            case CheckpointState.Finish:
+                renderer.material.SetColor("_BaseColor", finishBaseColor);
+                renderer.material.SetColor("_EmissionColor", finishEmmisionColor);
                 break;
         }
     }

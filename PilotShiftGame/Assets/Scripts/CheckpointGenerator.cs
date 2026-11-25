@@ -9,6 +9,7 @@ public class CheckpointGenerator : MonoBehaviour
     [SerializeField] private int checkpointAmount  = 1;
     [SerializeField] public SplineContainer splineContainer;
     [SerializeField] private GameObject checkpointPrefab;
+    [SerializeField] private GameManager gm;
     private List<Checkpoint> list;
     public List<Checkpoint> Checkpoints => list;
     public UnityEngine.Vector3 StartPos {get; private set;}
@@ -46,6 +47,7 @@ public class CheckpointGenerator : MonoBehaviour
             
 
             if(i == 0) checkpoint.setState(Checkpoint.CheckpointState.Next);
+            if(i == checkpointAmount-1) checkpoint.setState(Checkpoint.CheckpointState.Finish);
             else checkpoint.setState(Checkpoint.CheckpointState.Normal);            
             list.Add(checkpoint);  
         }
@@ -61,9 +63,18 @@ public class CheckpointGenerator : MonoBehaviour
                 return;   
             }
 
+            if (index == checkpointAmount - 1)
+            {
+                gm.FinishRace();
+                return;
+            }
+
             list[index].Reached = true;
             list[index].setState(Checkpoint.CheckpointState.Reached);
-            list[index + 1].setState(Checkpoint.CheckpointState.Next);
+            if(index != checkpointAmount - 2)
+            {
+                list[index + 1].setState(Checkpoint.CheckpointState.Next);  
+            }
             nextCheckpointIndex++;
             Debug.Log("Correct checkpoint!");
         }

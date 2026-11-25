@@ -13,7 +13,9 @@ public class GameManager : MonoBehaviour
         Finished
     }
     private double raceStartTime;
+    private double raceFinishTime;
     private double raceTime;
+    private TimeSpan TotalTime;
     public CheckpointGenerator checkpointGenerator;
     public GameState CurrentState {get; private set;} = GameState.Waiting;
 
@@ -75,12 +77,15 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void FinishRace()
+    public void FinishRace()
     {
         if (CurrentState == GameState.Active)
         {
-            CurrentState = GameState.Finished;
+            raceFinishTime = Time.timeAsDouble;
             Time.timeScale = 0f;
+            TotalTime = TimeSpan.FromSeconds(raceFinishTime - raceStartTime);
+            CurrentState = GameState.Finished;
+            Debug.Log("Finished race in: " + TotalTime);
         } else Debug.LogError("Cannot finish while no race is started");
     }
 }
