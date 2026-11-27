@@ -6,7 +6,8 @@ using System.Numerics;
 
 public class CheckpointGenerator : MonoBehaviour
 {
-    [SerializeField] private int checkpointAmount  = 1;
+    [SerializeField] private int checkpointAmount = 1;
+    public int CheckpointAmount => checkpointAmount;
     [SerializeField] public SplineContainer splineContainer;
     [SerializeField] private GameObject checkpointPrefab;
     [SerializeField] private GameManager gm;

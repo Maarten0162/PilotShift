@@ -77,6 +77,8 @@ public class SpaceshipController : MonoBehaviour
 
             moveDirection = transform.forward * moveInput;      
             rotationDirection = new(pitchInput, yawInput, -rollInput);
+        }else if (gameManager.CurrentState == GameManager.GameState.Finished){
+            arrow.SetActive(false);
         }
         else
         {
