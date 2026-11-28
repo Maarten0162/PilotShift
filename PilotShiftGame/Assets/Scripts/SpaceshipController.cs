@@ -6,7 +6,10 @@ public class SpaceshipController : MonoBehaviour
     private PlayerControls controls;
     private Rigidbody rb;
     [SerializeField] private float thrustForce = 10f;
-    [SerializeField] private float rotationForce = 10f;
+    [SerializeField] private float pitchSpeed = 2.5f; //turn rates in radians per second
+    [SerializeField] private float yawSpeed = 1.5f;
+    [SerializeField] private float rollSpeed = 3.5f;
+    [SerializeField] private float turnResponsiveness = 20f; //how fast the ship reaches the target turn rate, higher is snappier
     [SerializeField] private float maxSpeed = 20f;
     [SerializeField] private bool useMotion = false;
 
@@ -31,6 +34,7 @@ public class SpaceshipController : MonoBehaviour
     {
         controls = new PlayerControls();
         rb = this.GetComponent<Rigidbody>();
+        rb.interpolation = RigidbodyInterpolation.Interpolate; //smooths movement between physics steps so the ship and camera dont stutter
     }
     void OnEnable()
     {
@@ -101,7 +105,9 @@ public class SpaceshipController : MonoBehaviour
              rb.AddForce(moveDirection * thrustForce, ForceMode.Force);
             Vector3 clampedValue = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
             rb.linearVelocity = clampedValue;
-            rb.AddTorque(transform.TransformDirection(rotationDirection * rotationForce), ForceMode.Force); //transform.transformdirection turns world axis to local axis
+
+            Vector3 targetAngularVelocity = rb.rotation * Vector3.Scale(rotationDirection, new Vector3(pitchSpeed, yawSpeed, rollSpeed)); //rb.rotation turns the local turn rates into world space
+            rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, targetAngularVelocity, turnResponsiveness * Time.fixedDeltaTime);
         }
     }
 

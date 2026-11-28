@@ -101,7 +101,7 @@ function App() {
     let active = true
     let animationFrameId = 0
     let frameCount = 0
-
+    let lastVideoTime = -1
 
     async function startCamera() {
       try {
@@ -175,7 +175,9 @@ function App() {
       const video = videoRef.current
       const handLandmarker = handLandmarkerRef.current
 
-      if (video && handLandmarker && video.readyState >= 2) {
+      // only run detection when the camera has delivered a new frame
+      if (video && handLandmarker && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime
         const startTime = performance.now()
 
         const results = handLandmarker.detectForVideo(

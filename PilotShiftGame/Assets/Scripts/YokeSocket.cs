@@ -12,8 +12,8 @@ public class YokeSocket : WebSocketBehavior
     protected override void OnMessage(MessageEventArgs e)
     {
         websocketClass data = JsonUtility.FromJson<websocketClass>(e.Data);
-        double delay = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - data.time;
-        Debug.Log("delay: " + delay + " Rollvalue: " + data.roll + " PitchValue: " + data.pitch + "YawValue:" + "NaN");
+        // double delay = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - data.time;
+        // Debug.Log("delay: " + delay + " Rollvalue: " + data.roll + " PitchValue: " + data.pitch + "YawValue:" + "NaN");
         receiver.RollValue = data.roll;
         receiver.PitchValue = data.pitch;
     }
