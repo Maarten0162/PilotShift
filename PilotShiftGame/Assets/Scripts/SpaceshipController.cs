@@ -59,7 +59,7 @@ public class SpaceshipController : MonoBehaviour
         {
             if (useMotion)
             {
-                moveInput = 25f;
+                moveInput = 0.7f;
                 rollInput = receiver.RollValue;
                 pitchInput = receiver.PitchValue;
 
